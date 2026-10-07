@@ -15,7 +15,7 @@ mesmo repositório — nada de CLI externo.
 |---|---|
 | [`Decco.API`](https://github.com/vohdril/Decco.API) | core .NET 8 (EF Core + Dapper) que **possui** este banco |
 | [`Decco.Dashboard`](https://github.com/vohdril/Decco.Dashboard) | front React/Vite + Module Federation |
-| [`decco-skill`](https://github.com/vohdril/decco-skill) | a skill didática que guia o desenvolvimento |
+| [`decco-skills`](https://github.com/vohdril/decco-skills) | as skills didáticas que guiam o desenvolvimento (a migrar para `Decco.Skills`) |
 | **`Decco.Database`** | **este repo** — o schema, versionado |
 
 Por que um repositório separado para o banco: o schema tem ciclo de vida próprio (muda por migração, não por
@@ -28,16 +28,19 @@ compilação), é consumido por mais de um projeto, e precisa de histórico audi
 
 ```
 migrations/            APPEND-ONLY, journaled em dbo.SchemaVersions
-  0001_baseline_schema.sql     21 tabelas + 12 índices — DDL do decco.sql, inalterado
+  0001_baseline_schema.sql             21 tabelas + 12 índices — DDL do decco.sql, inalterado
+  0002_instalacao.sql                  EXPAND: Instalacao + Cat_TipoInstalacao; migra Laboratorio e SitioContencao
+  0003_operacao.sql                    Operacao + Cat_Operacao (trabalho escopado por instalação)
+  0004_contrai_laboratorio_e_sitio.sql CONTRACT: verifica, depois remove Laboratorio e SitioContencao
 
 programmability/       RUN-ALWAYS, CREATE OR ALTER — editável no lugar, diffável no git
-  triggers/      (2)
-  procedures/    (13)
+  triggers/      (6)
+  procedures/    (18)
   views/         (3)
   descriptions/  (4)   extended properties = documentação embutida
 
 seed/                  RUN-ALWAYS, MERGE convergente
-  010..080-Cat_*.sql   os 8 catálogos
+  010..100-Cat_*.sql   os 10 catálogos
   exemplos/            dados de exemplo, guardados por IF NOT EXISTS
 
 docs/                  gerar-dicionario.sql → DICIONARIO-DE-DADOS.md
@@ -125,6 +128,42 @@ Senha de Docker **sempre** por variável de ambiente — nunca em arquivo versio
 
 ---
 
+## Expand / contract — como uma migração destrutiva é feita aqui
+
+As migrações 0002–0004 trocaram texto livre por entidade (`Laboratorio` + `Anomalia.SitioContencao` →
+`Instalacao`) **sem perder dados**, em duas fases:
+
+| Fase | Script | O que faz |
+|---|---|---|
+| **Expand** | `0002` | cria o modelo novo **ao lado** do antigo e copia os dados (set-based, genérico — roda igual num banco populado e num vazio) |
+| | `0003` | acrescenta o que depende do modelo novo (`Operacao`) |
+| **Contract** | `0004` | **prova** que todo dado antigo tem correspondente novo (3 verificações com `THROW`) e só então remove o antigo |
+
+Regras que valem para qualquer migração destrutiva futura:
+
+- A verificação vem **antes** do `DROP`, e falha com `THROW` — que no DbUp derruba a transação do script inteiro.
+- O script de contract é **um lote só** (sem `GO`). `THROW` aborta o lote corrente; se o arquivo for rodado à mão no
+  SSMS, cada `GO` iniciaria um lote novo que roda mesmo depois do erro — e os `DROP` aconteceriam. Em lote único, não.
+- Migração estrutural **desliga o trigger de auditoria** enquanto mexe nas linhas: não é edição de negócio e não deve
+  sobrescrever `DataAtualizacao`/`UsuarioAtualizacao`.
+- **Ensaio em dois bancos** antes do real: uma cópia do banco populado (adoção) e um banco vazio. Os dois precisam
+  terminar no **mesmo estado** — schema, programabilidade, descrições e dados.
+
+### Armadilha: prefixo `sp_` + objetos perdidos no `master`
+
+Para nomes que começam com `sp_`, o SQL Server procura **primeiro no `master`**. Se existir lá uma procedure com o
+mesmo nome (ex.: alguém rodou o `decco.sql` sem `USE` e o schema caiu no `master`), o `CREATE OR ALTER` de um banco
+novo enxerga a do `master`, tenta um `ALTER` local e falha com
+`Msg 208 — Invalid object name 'sp_...'`. Qualificar com `dbo.` **não** resolve.
+
+- Diagnóstico: `SELECT name FROM master.sys.objects WHERE is_ms_shipped = 0 AND name LIKE 'sp[_]%'`.
+- Saída limpa: remover os objetos do `master` (decisão de quem administra a instância), ou ensaiar numa instância
+  LocalDB nova — `sqllocaldb create DeccoEnsaio -s`, que já nasce com o `master` limpo.
+- Correção de raiz: não usar o prefixo `sp_` em procedures de usuário. Renomear as 18 é uma mudança que quebra a
+  `Decco.API`; está no `DECCO-BACKLOG.md`.
+
+---
+
 ## Documentação embutida
 
 As descrições de tabela e coluna vivem em `programmability/descriptions/` como *extended properties*
@@ -137,7 +176,7 @@ Elas aparecem no SSMS e no Azure Data Studio, viram `<summary>` nas classes gera
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d DeccoDB -i docs/gerar-dicionario.sql -o docs/DICIONARIO-DE-DADOS.md -h -1 -W -f 65001
 ```
 
-Cobertura atual: **21/21 tabelas** e **73 colunas** de domínio documentadas.
+Cobertura atual: **24/24 tabelas** e **94 colunas** de domínio documentadas.
 
 ---
 

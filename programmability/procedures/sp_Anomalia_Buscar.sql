@@ -28,7 +28,8 @@ BEGIN
         a.IEIA_D_Base,
         a.FatorCoerenciaSpin,
         a.Status,
-        a.SitioContencao,
+        ic.Codigo AS InstalacaoContencaoCodigo,
+        ic.Nome AS InstalacaoContencao,
         a.DataCriacao,
         a.DataAtualizacao,
         
@@ -58,6 +59,7 @@ BEGIN
     INNER JOIN Cat_TipoMateria tm ON a.TipoMateriaId = tm.Id
     INNER JOIN Cat_MecanismoInteracao mp ON a.MecanismoPrimarioId = mp.Id
     LEFT JOIN Cat_MecanismoInteracao ms ON a.MecanismoSecundarioId = ms.Id
+    LEFT JOIN Instalacao ic ON ic.Id = a.InstalacaoContencaoId
     WHERE (@CodigoSCP IS NULL OR a.CodigoSCP LIKE '%' + @CodigoSCP + '%')
       AND (@ClasseObjetoId IS NULL OR a.ClasseObjetoId = @ClasseObjetoId)
       AND (@CamadaOntologicaId IS NULL OR a.CamadaOntologicaId = @CamadaOntologicaId)

@@ -1,5 +1,5 @@
 -- =============================================================================
--- Descrições de TABELA — as 21 tabelas do DeccoDB.
+-- Descrições de TABELA — as 24 tabelas do DeccoDB (21 do baseline − Laboratorio + 4 da 0002/0003).
 -- Vocabulário de lore ancorado em LORE-DECCO-BRUTO.md (raiz do workspace).
 -- Run-always, idempotente via sp_Decco_SetDescription.
 -- =============================================================================
@@ -30,6 +30,12 @@ EXEC dbo.sp_Decco_SetDescription 'Cat_CognicaoAparente', NULL,
 EXEC dbo.sp_Decco_SetDescription 'Cat_Periculosidade', NULL,
  N'CATÁLOGO do Sistema Brasileiro (Protocolo OA). Escala de 9 níveis, do Mínimo ao Máximo. A partir do nível 8 há risco de romper o Véu/Esquadria e o protocolo de contenção passa a ser especial.';
 
+EXEC dbo.sp_Decco_SetDescription 'Cat_TipoInstalacao', NULL,
+ N'CATÁLOGO. Tipos de instalação: SITIO, LABORATORIO, AREA_CONTENCAO, POSTO_AVANCADO. O flag PermiteFilhos define a hierarquia — tipo que permite filhos é raiz, os demais vivem dentro dele.';
+
+EXEC dbo.sp_Decco_SetDescription 'Cat_Operacao', NULL,
+ N'CATÁLOGO. Tipos de operação: INVESTIGACAO, PESQUISA, SUPRESSAO. Define se o tipo exige uma anomalia catalogada como alvo (RequerAnomalia) e o clearance mínimo sugerido para a operação.';
+
 -- ── Agregado principal ──────────────────────────────────────────────────────
 
 EXEC dbo.sp_Decco_SetDescription 'Anomalia', NULL,
@@ -51,8 +57,11 @@ EXEC dbo.sp_Decco_SetDescription 'Evento', NULL,
 
 -- ── Configuração / backoffice ───────────────────────────────────────────────
 
-EXEC dbo.sp_Decco_SetDescription 'Laboratorio', NULL,
- N'CONFIGURAÇÃO. Unidade de pesquisa dentro de um sítio de contenção, com responsável, especialidade e clearance mínimo. O vínculo com o sítio é feito hoje por texto livre na coluna Sitio — ver DECCO-BACKLOG (entidade Instalacao).';
+EXEC dbo.sp_Decco_SetDescription 'Instalacao', NULL,
+ N'CONFIGURAÇÃO / ESCOPO. Lugar físico do DeCCO: sítio, laboratório, área de contenção ou posto avançado (Cat_TipoInstalacao). Hierárquica em dois níveis — sítio na raiz, demais tipos como filhos (TR_Instalacao_Validar_Hierarquia). É a FRONTEIRA DE PERMISSÃO do sistema: o usuário recebe uma lista de instalações (relação que vive no DeccoAuthDB) e o trabalho escopado (Operacao) é filtrado por ela. Absorveu a antiga tabela Laboratorio (migração 0002/0004).';
+
+EXEC dbo.sp_Decco_SetDescription 'Operacao', NULL,
+ N'TRABALHO ESCOPADO. Investigação, pesquisa ou supressão (Cat_Operacao) conduzida DENTRO de uma instalação — InstalacaoId é obrigatório desde a criação. Diferente da Anomalia, que é catálogo global, a operação pertence a um lugar, e por isso é a primeira entidade cujo acesso e cache são recortados por instalação (chaves decco:inst:{codigo}:operacao:*).';
 
 EXEC dbo.sp_Decco_SetDescription 'ProtocoloContencao', NULL,
  N'CONFIGURAÇÃO. Procedimento de contenção versionado: passos, recursos necessários, nível de urgência e as classes de objeto a que se aplica. Vincula-se às anomalias por Protocolo_AplicadoEm.';

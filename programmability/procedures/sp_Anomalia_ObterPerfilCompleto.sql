@@ -21,7 +21,8 @@ BEGIN
         a.IEIA_D_Base,
         a.FatorCoerenciaSpin,
         a.Status,
-        a.SitioContencao,
+        ic.Codigo AS InstalacaoContencaoCodigo,
+        ic.Nome AS InstalacaoContencao,
         a.ResponsavelPesquisa,
         a.DataCriacao,
         a.DataAtualizacao
@@ -32,6 +33,7 @@ BEGIN
     INNER JOIN Cat_TipoMateria tm ON a.TipoMateriaId = tm.Id
     INNER JOIN Cat_MecanismoInteracao mp ON a.MecanismoPrimarioId = mp.Id
     LEFT JOIN Cat_MecanismoInteracao ms ON a.MecanismoSecundarioId = ms.Id
+    LEFT JOIN Instalacao ic ON ic.Id = a.InstalacaoContencaoId
     WHERE a.Id = @AnomaliaId;
     
     -- Entidades vivas associadas

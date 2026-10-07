@@ -12,7 +12,7 @@ CREATE OR ALTER PROCEDURE sp_Anomalia_Inserir
     @MecanismoSecundarioId INT = NULL,
     @IEIA_D_Base DECIMAL(8,4) = NULL,
     @FatorCoerenciaSpin VARCHAR(20) = NULL,
-    @SitioContencao NVARCHAR(100) = NULL,
+    @InstalacaoContencaoId INT = NULL,
     @ResponsavelPesquisa NVARCHAR(255) = NULL
 AS
 BEGIN
@@ -26,14 +26,14 @@ BEGIN
             CognicaoAparenteId, PericulosidadeId,
             MecanismoPrimarioId, MecanismoSecundarioId,
             IEIA_D_Base, FatorCoerenciaSpin,
-            SitioContencao, ResponsavelPesquisa
+            InstalacaoContencaoId, ResponsavelPesquisa
         ) VALUES (
             @CodigoSCP, @NomeComum, @Descricao,
             @ClasseObjetoId, @CamadaOntologicaId, @TipoMateriaId,
             @CognicaoAparenteId, @PericulosidadeId,
             @MecanismoPrimarioId, @MecanismoSecundarioId,
             @IEIA_D_Base, @FatorCoerenciaSpin,
-            @SitioContencao, @ResponsavelPesquisa
+            @InstalacaoContencaoId, @ResponsavelPesquisa
         );
         
         DECLARE @NovaAnomaliaId INT = SCOPE_IDENTITY();

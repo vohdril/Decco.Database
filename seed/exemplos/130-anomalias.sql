@@ -4,6 +4,13 @@ IF NOT EXISTS (SELECT 1 FROM Anomalia WHERE CodigoSCP = 'SCP-1001')
 BEGIN
     PRINT 'seed/exemplos: inserindo SCP-1001 e SCP-1002';
 
+    -- Instalacoes de contencao (por codigo - seed/exemplos/100 ou migracao 0002).
+    -- Equivalem ao antigo texto livre SitioContencao:
+    --   'Sítio-19, Setor de Biologia Anômala' -> LAB-BIO-19
+    --   'Sítio-64, Biblioteca Proibida'       -> AREA-001
+    DECLARE @InstalacaoId_LAB_BIO_19 INT = (SELECT Id FROM Instalacao WHERE Codigo = 'LAB-BIO-19');
+    DECLARE @InstalacaoId_AREA_001   INT = (SELECT Id FROM Instalacao WHERE Codigo = 'AREA-001');
+
     -- Exemplo 1: Metamorfo Complexo
     DECLARE @MetamorfoId INT;
     DECLARE @PericiaMetamorfoseId INT;
@@ -41,7 +48,7 @@ BEGIN
         @MecanismoSecundarioId = @MecanismoSecundarioId_PSI_C,
         @IEIA_D_Base = 0.5,
         @FatorCoerenciaSpin = 'Alto',
-        @SitioContencao = 'Sítio-19, Setor de Biologia Anômala',
+        @InstalacaoContencaoId = @InstalacaoId_LAB_BIO_19,
         @ResponsavelPesquisa = 'Dra. Elara Vance';
 
     -- Obter o ID da anomalia criada
@@ -129,7 +136,7 @@ BEGIN
         @MecanismoSecundarioId = @MecanismoSecundarioId_THETA_C,
         @IEIA_D_Base = 0.05,
         @FatorCoerenciaSpin = 'Crítico',
-        @SitioContencao = 'Sítio-64, Biblioteca Proibida',
+        @InstalacaoContencaoId = @InstalacaoId_AREA_001,
         @ResponsavelPesquisa = 'Dr. Aris Thoth';
 
     -- Obter o ID da anomalia criada
@@ -202,12 +209,12 @@ BEGIN
     PRINT '- 2 tabelas de perícias (PericiaAnomalia, Instancia_PericiaDesviante)';
     PRINT '- 2 tabelas de relacionamento N:N (Pericia_Manifestacao, Protocolo_AplicadoEm)';
     PRINT '- 1 tabela de histórico (Incidente)';
-    PRINT '- 3 novas entidades (Laboratorio, ProtocoloContencao, NotificacaoAnomalia)';
+    PRINT '- Instalacao (absorveu Laboratorio), Operacao, ProtocoloContencao, NotificacaoAnomalia';
     PRINT '- 2 triggers de integridade';
     PRINT '- 12 stored procedures de CRUD';
     PRINT '- 3 views para dashboard';
     PRINT '- 2 exemplos de anomalias inseridas';
-    PRINT '- 3 laboratórios, 3 protocolos, 2 notificações';
+    PRINT '- 7 instalações (3 sítios, 3 laboratórios, 1 área), 3 protocolos, 2 notificações, 4 operações';
 END
 ELSE
     PRINT 'seed/exemplos: SCP-1001 e SCP-1002 ja existe - pulando.';

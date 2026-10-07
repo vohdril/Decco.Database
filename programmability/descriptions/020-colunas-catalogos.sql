@@ -57,4 +57,20 @@ EXEC dbo.sp_Decco_SetDescription 'Cat_Periculosidade','Nivel',
  N'Escala de 1 (Mínimo) a 9 (Máximo), com CHECK no banco. É a chave de negócio desta tabela — o Id é apenas técnico.';
 EXEC dbo.sp_Decco_SetDescription 'Cat_Periculosidade','CorAlerta',
  N'Cor hexadecimal do nível, em gradiente verde->vermelho. Lida pela UI; não duplicar a paleta no front.';
+
+-- ── Cat_TipoInstalacao ──────────────────────────────────────────────────────
+EXEC dbo.sp_Decco_SetDescription 'Cat_TipoInstalacao','Codigo',
+ N'Chave de negócio: SITIO, LABORATORIO, AREA_CONTENCAO, POSTO_AVANCADO. Os quatro são inseridos pela migração 0002 (que depende deles para migrar dados) e convergidos pelo seed/090.';
+EXEC dbo.sp_Decco_SetDescription 'Cat_TipoInstalacao','PermiteFilhos',
+ N'1 = tipo raiz, que contém outras instalações (SITIO). 0 = tipo que vive dentro de um raiz. Base das regras de TR_Instalacao_Validar_Hierarquia.';
+
+-- ── Cat_Operacao ────────────────────────────────────────────────────────────
+EXEC dbo.sp_Decco_SetDescription 'Cat_Operacao','Codigo',
+ N'Chave de negócio: INVESTIGACAO, PESQUISA, SUPRESSAO. Semeados apenas pelo seed/100 — nenhuma migração depende deles.';
+EXEC dbo.sp_Decco_SetDescription 'Cat_Operacao','RequerAnomalia',
+ N'1 = a operação só pode existir com uma anomalia catalogada como alvo (pesquisa, supressão). 0 = pode nascer de um relato de campo (investigação). Imposto por TR_Operacao_Validar.';
+EXEC dbo.sp_Decco_SetDescription 'Cat_Operacao','NivelAcessoMinimo',
+ N'Clearance mínimo sugerido para operações deste tipo. Referência para a aplicação — cada Operacao guarda o seu próprio NivelAcessoMinimo.';
+EXEC dbo.sp_Decco_SetDescription 'Cat_Operacao','CorAlerta',
+ N'Cor hexadecimal do tipo, lida pela UI.';
 GO

@@ -11,7 +11,9 @@ CREATE OR ALTER PROCEDURE sp_Anomalia_Atualizar
     @IEIA_D_Base DECIMAL(8,4) = NULL,
     @FatorCoerenciaSpin VARCHAR(20) = NULL,
     @Status VARCHAR(20) = NULL,
-    @SitioContencao NVARCHAR(100) = NULL,
+    @InstalacaoContencaoId INT = NULL,
+    @CognicaoAparenteId INT = NULL,
+    @PericulosidadeId INT = NULL,
     @ResponsavelPesquisa NVARCHAR(255) = NULL
 AS
 BEGIN
@@ -30,7 +32,9 @@ BEGIN
             IEIA_D_Base = ISNULL(@IEIA_D_Base, IEIA_D_Base),
             FatorCoerenciaSpin = ISNULL(@FatorCoerenciaSpin, FatorCoerenciaSpin),
             Status = ISNULL(@Status, Status),
-            SitioContencao = ISNULL(@SitioContencao, SitioContencao),
+            InstalacaoContencaoId = ISNULL(@InstalacaoContencaoId, InstalacaoContencaoId),
+            CognicaoAparenteId = ISNULL(@CognicaoAparenteId, CognicaoAparenteId),
+            PericulosidadeId = ISNULL(@PericulosidadeId, PericulosidadeId),
             ResponsavelPesquisa = ISNULL(@ResponsavelPesquisa, ResponsavelPesquisa)
         WHERE Id = @Id;
         
