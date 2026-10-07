@@ -1,0 +1,48 @@
+﻿-- Procedure para inserir uma nova anomalia
+CREATE OR ALTER PROCEDURE sp_Anomalia_Inserir
+    @CodigoSCP VARCHAR(50),
+    @NomeComum NVARCHAR(255),
+    @Descricao NVARCHAR(MAX),
+    @ClasseObjetoId INT,
+    @CamadaOntologicaId INT,
+    @TipoMateriaId INT,
+    @CognicaoAparenteId INT = NULL,
+    @PericulosidadeId INT = NULL,
+    @MecanismoPrimarioId INT,
+    @MecanismoSecundarioId INT = NULL,
+    @IEIA_D_Base DECIMAL(8,4) = NULL,
+    @FatorCoerenciaSpin VARCHAR(20) = NULL,
+    @SitioContencao NVARCHAR(100) = NULL,
+    @ResponsavelPesquisa NVARCHAR(255) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    BEGIN TRY
+        
+        INSERT INTO Anomalia (
+            CodigoSCP, NomeComum, Descricao,
+            ClasseObjetoId, CamadaOntologicaId, TipoMateriaId,
+            CognicaoAparenteId, PericulosidadeId,
+            MecanismoPrimarioId, MecanismoSecundarioId,
+            IEIA_D_Base, FatorCoerenciaSpin,
+            SitioContencao, ResponsavelPesquisa
+        ) VALUES (
+            @CodigoSCP, @NomeComum, @Descricao,
+            @ClasseObjetoId, @CamadaOntologicaId, @TipoMateriaId,
+            @CognicaoAparenteId, @PericulosidadeId,
+            @MecanismoPrimarioId, @MecanismoSecundarioId,
+            @IEIA_D_Base, @FatorCoerenciaSpin,
+            @SitioContencao, @ResponsavelPesquisa
+        );
+        
+        DECLARE @NovaAnomaliaId INT = SCOPE_IDENTITY();
+        
+        SELECT @NovaAnomaliaId as NovoId, @CodigoSCP as CodigoFormatado;
+        
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH
+END;
+GO
