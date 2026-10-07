@@ -14,6 +14,8 @@ Console.OutputEncoding = Encoding.UTF8;
 //   dotnet run -- --target docker
 //   dotnet run -- --target localdb --baseline   (adoption: mark without running)
 //   dotnet run -- --target localdb --dry-run    (list what would run)
+//   dotnet run -- --target localdb --single-transaction
+//                                               (the whole deploy in ONE transaction)
 //
 // Execution order:
 //   1. migrations/        RunOnce  — journaled in dbo.SchemaVersions (append-only)
@@ -21,7 +23,7 @@ Console.OutputEncoding = Encoding.UTF8;
 //   3. seed/              RunAlways — converging MERGE of the catalogs
 //   4. seed/examples/     RunAlways — example data, guarded by IF NOT EXISTS
 //
-// Why this order: `seed/examples/` calls stored procedures (sp_Anomalia_Inserir…),
+// Why this order: `seed/examples/` calls stored procedures (usp_Anomaly_Insert…),
 // so programmability must exist first. And a migration may change a table a
 // procedure depends on, so migrations come first.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -39,6 +41,7 @@ string? Opt(string name)
 
 var baseline = Flag("--baseline");
 var dryRun   = Flag("--dry-run");
+var singleTransaction = Flag("--single-transaction");
 var target   = Opt("--target") ?? "localdb";
 var explicitConnection = Opt("--connection");
 
@@ -61,6 +64,7 @@ Console.WriteLine($"╔═ Decco.Database.Runner");
 Console.WriteLine($"║  target ........ {(explicitConnection is not null ? "(--connection)" : target)}");
 Console.WriteLine($"║  root .......... {root}");
 Console.WriteLine($"║  mode .......... {(baseline ? "BASELINE (mark without running)" : dryRun ? "DRY-RUN" : "deploy")}");
+Console.WriteLine($"║  transaction ... {(singleTransaction ? "single (whole deploy)" : "per script")}");
 Console.WriteLine($"╚═");
 
 // ── Step 0: create the database if it does not exist ────────────────────────
@@ -101,16 +105,22 @@ if (baseline)
 // ── Normal deployment ───────────────────────────────────────────────────────
 var scripts = LoadAll(root);
 
-var engine = DeployChanges.To
+var builder = DeployChanges.To
     .SqlDatabase(connectionString)
     .WithScripts(scripts)
     // `WithVariablesDisabled` turns off DbUp's $variable$ substitution.
     // Without it, any literal `$` in a script becomes an undefined-variable error.
     .WithVariablesDisabled()
-    .WithTransactionPerScript()
     .JournalToSqlTable("dbo", "SchemaVersions")
-    .LogTo(log)
-    .Build();
+    .LogTo(log);
+
+// Per script (default): each script commits on its own, so a failure keeps what came before.
+// Single transaction: migrations AND programmability enter or leave together. Use it for a
+// deploy whose migration and run-always scripts depend on each other — e.g. 0005, which
+// drops the old triggers and relies on 20-triggers to create the English ones: per script,
+// the tables would run without triggers between the two steps.
+builder = singleTransaction ? builder.WithTransaction() : builder.WithTransactionPerScript();
+var engine = builder.Build();
 
 if (dryRun)
 {
