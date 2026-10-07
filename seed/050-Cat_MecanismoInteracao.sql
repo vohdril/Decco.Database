@@ -1,8 +1,8 @@
-﻿-- Seed convergente (run-always). Chave natural: Codigo.
--- NOTA DE CORREÇÃO vs. baseline: o decco.sql original gravava CamadaOntologicaId
--- com os literais 1..4, dependendo da ordem do IDENTITY. Aqui a FK é resolvida
--- pelo Simbolo da camada — o seed converge mesmo se os Ids mudarem.
-MERGE Cat_MecanismoInteracao AS alvo
+﻿-- Converging seed (run-always). Natural key: Codigo.
+-- CORRECTION NOTE vs. baseline: the original decco.sql wrote CamadaOntologicaId
+-- as the literals 1..4, relying on the IDENTITY order. Here the FK is resolved
+-- by the layer Simbolo — the seed converges even if the Ids change.
+MERGE Cat_MecanismoInteracao AS target
 USING (
     SELECT v.Codigo, v.Nome, v.Descricao, c.Id AS CamadaOntologicaId, v.EhSubnatureza
     FROM (VALUES
@@ -20,12 +20,12 @@ USING (
         ('OMEGA-C','Omega-Condicional' ,'Acesso limitado a Σ através de gatilho.'                               ,'OMEGA',CAST(1 AS BIT))
     ) AS v (Codigo, Nome, Descricao, CamadaSimbolo, EhSubnatureza)
     LEFT JOIN Cat_CamadaOntologica c ON c.Simbolo = v.CamadaSimbolo
-) AS origem
-    ON alvo.Codigo = origem.Codigo
+) AS source
+    ON target.Codigo = source.Codigo
 WHEN MATCHED THEN UPDATE SET
-    alvo.Nome = origem.Nome, alvo.Descricao = origem.Descricao,
-    alvo.CamadaOntologicaId = origem.CamadaOntologicaId, alvo.EhSubnatureza = origem.EhSubnatureza
+    target.Nome = source.Nome, target.Descricao = source.Descricao,
+    target.CamadaOntologicaId = source.CamadaOntologicaId, target.EhSubnatureza = source.EhSubnatureza
 WHEN NOT MATCHED BY TARGET THEN
     INSERT (Codigo, Nome, Descricao, CamadaOntologicaId, EhSubnatureza)
-    VALUES (origem.Codigo, origem.Nome, origem.Descricao, origem.CamadaOntologicaId, origem.EhSubnatureza);
+    VALUES (source.Codigo, source.Nome, source.Descricao, source.CamadaOntologicaId, source.EhSubnatureza);
 GO

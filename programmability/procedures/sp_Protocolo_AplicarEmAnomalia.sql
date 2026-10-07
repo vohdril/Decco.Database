@@ -1,4 +1,4 @@
-﻿-- Procedure para vincular protocolo a anomalia
+﻿-- Procedure that links a protocol to an anomaly
 CREATE OR ALTER PROCEDURE sp_Protocolo_AplicarEmAnomalia
     @ProtocoloId INT,
     @AnomaliaId INT,
@@ -7,9 +7,9 @@ AS
 BEGIN
     SET NOCOUNT ON;
     IF NOT EXISTS (SELECT 1 FROM ProtocoloContencao WHERE Id = @ProtocoloId)
-        RAISERROR('Protocolo não encontrado', 16, 1);
+        RAISERROR('Protocol not found', 16, 1);
     IF NOT EXISTS (SELECT 1 FROM Anomalia WHERE Id = @AnomaliaId)
-        RAISERROR('Anomalia não encontrada', 16, 1);
+        RAISERROR('Anomaly not found', 16, 1);
     INSERT INTO Protocolo_AplicadoEm (ProtocoloId, AnomaliaId, DataInicio, Status, Observacoes)
     VALUES (@ProtocoloId, @AnomaliaId, GETDATE(), 'ATIVO', @Observacoes);
 END;

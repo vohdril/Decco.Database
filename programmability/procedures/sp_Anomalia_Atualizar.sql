@@ -1,4 +1,4 @@
-﻿-- Procedure para atualizar uma anomalia
+﻿-- Procedure that updates an anomaly
 CREATE OR ALTER PROCEDURE sp_Anomalia_Atualizar
     @Id INT,
     @NomeComum NVARCHAR(255) = NULL,
@@ -39,7 +39,7 @@ BEGIN
         WHERE Id = @Id;
         
         IF @@ROWCOUNT = 0
-            RAISERROR('Anomalia não encontrada', 16, 1);
+            RAISERROR('Anomaly not found', 16, 1);
         
     END TRY
     BEGIN CATCH

@@ -1,11 +1,11 @@
-﻿-- Procedure para obter o perfil completo de uma anomalia
+﻿-- Procedure that returns the full profile of an anomaly
 CREATE OR ALTER PROCEDURE sp_Anomalia_ObterPerfilCompleto
     @AnomaliaId INT
 AS
 BEGIN
     SET NOCOUNT ON;
     
-    -- Informações básicas da anomalia
+    -- Basic anomaly information
     SELECT 
         a.Id,
         a.CodigoSCP,
@@ -36,19 +36,19 @@ BEGIN
     LEFT JOIN Instalacao ic ON ic.Id = a.InstalacaoContencaoId
     WHERE a.Id = @AnomaliaId;
     
-    -- Entidades vivas associadas
+    -- Associated living entities
     SELECT * FROM EntidadeViva WHERE AnomaliaId = @AnomaliaId;
     
-    -- Artefatos associados
+    -- Associated artifacts
     SELECT * FROM Artefato WHERE AnomaliaId = @AnomaliaId;
     
-    -- Localidades associadas
+    -- Associated locations
     SELECT * FROM Localidade WHERE AnomaliaId = @AnomaliaId;
     
-    -- Eventos associados
+    -- Associated events
     SELECT * FROM Evento WHERE AnomaliaId = @AnomaliaId;
     
-    -- Perícias da anomalia
+    -- Anomaly skills
     SELECT 
         pa.*,
         mp.Nome as MecanismoPrimarioNome,
@@ -58,7 +58,7 @@ BEGIN
     LEFT JOIN Cat_MecanismoInteracao ms ON pa.MecanismoSecundarioId = ms.Id
     WHERE pa.AnomaliaId = @AnomaliaId;
     
-    -- Manifestações (via perícias)
+    -- Manifestations (through skills)
     SELECT DISTINCT
         cm.Codigo,
         cm.Nome,
@@ -68,7 +68,7 @@ BEGIN
     INNER JOIN Cat_ManifestacaoEspecifica cm ON pm.ManifestacaoEspecificaId = cm.Id
     WHERE pa.AnomaliaId = @AnomaliaId;
     
-    -- Incidentes registrados
+    -- Recorded incidents
     SELECT * FROM Incidente 
     WHERE AnomaliaId = @AnomaliaId 
     ORDER BY DataHora DESC;

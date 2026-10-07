@@ -1,4 +1,4 @@
-﻿-- Procedure para inserir uma nova anomalia
+﻿-- Procedure that inserts a new anomaly
 CREATE OR ALTER PROCEDURE sp_Anomalia_Inserir
     @CodigoSCP VARCHAR(50),
     @NomeComum NVARCHAR(255),
@@ -36,9 +36,9 @@ BEGIN
             @InstalacaoContencaoId, @ResponsavelPesquisa
         );
         
-        DECLARE @NovaAnomaliaId INT = SCOPE_IDENTITY();
+        DECLARE @NewAnomaliaId INT = SCOPE_IDENTITY();
         
-        SELECT @NovaAnomaliaId as NovoId, @CodigoSCP as CodigoFormatado;
+        SELECT @NewAnomaliaId as NovoId, @CodigoSCP as CodigoFormatado;
         
     END TRY
     BEGIN CATCH

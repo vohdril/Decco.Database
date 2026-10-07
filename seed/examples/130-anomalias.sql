@@ -1,17 +1,17 @@
-﻿-- Dados de exemplo - As 2 anomalias completas (decco.sql secao 11)
--- Run-always, mas GUARDADO: so insere se ainda nao existir. Rodar duas vezes e inofensivo.
+﻿-- Example data - The 2 complete anomalies (decco.sql section 11)
+-- Run-always, but GUARDED: inserts only if it does not exist yet. Running it twice is harmless.
 IF NOT EXISTS (SELECT 1 FROM Anomalia WHERE CodigoSCP = 'SCP-1001')
 BEGIN
-    PRINT 'seed/exemplos: inserindo SCP-1001 e SCP-1002';
+    PRINT 'seed/examples: inserting SCP-1001 and SCP-1002';
 
-    -- Instalacoes de contencao (por codigo - seed/exemplos/100 ou migracao 0002).
-    -- Equivalem ao antigo texto livre SitioContencao:
+    -- Containment facilities (by code - seed/examples/100 or migration 0002).
+    -- They are equivalent to the former free-text SitioContencao:
     --   'Sítio-19, Setor de Biologia Anômala' -> LAB-BIO-19
     --   'Sítio-64, Biblioteca Proibida'       -> AREA-001
     DECLARE @InstalacaoId_LAB_BIO_19 INT = (SELECT Id FROM Instalacao WHERE Codigo = 'LAB-BIO-19');
     DECLARE @InstalacaoId_AREA_001   INT = (SELECT Id FROM Instalacao WHERE Codigo = 'AREA-001');
 
-    -- Exemplo 1: Metamorfo Complexo
+    -- Example 1: Complex Shapeshifter
     DECLARE @MetamorfoId INT;
     DECLARE @PericiaMetamorfoseId INT;
     DECLARE @ClasseObjetoId_EUCLID INT, @CamadaOntologicaId_THETA INT, @TipoMateriaId_BARIONICA INT;
@@ -19,7 +19,7 @@ BEGIN
     DECLARE @MecanismoPrimarioId_THETA_C INT, @MecanismoSecundarioId_PSI_C INT;
     DECLARE @ManifestacaoId_METAMORFOSE INT, @ManifestacaoId_REGENERACAO INT;
 
-    -- Obter os IDs necessários
+    -- Get the required IDs
     SET @ClasseObjetoId_EUCLID = (SELECT Id FROM Cat_ClasseObjeto WHERE ClasseACS = 'EUCLID');
     SET @CamadaOntologicaId_THETA = (SELECT Id FROM Cat_CamadaOntologica WHERE Simbolo = 'THETA');
     SET @TipoMateriaId_BARIONICA = (SELECT Id FROM Cat_TipoMateria WHERE Nome = 'Bariônica Anômala');
@@ -30,11 +30,11 @@ BEGIN
     SET @ManifestacaoId_METAMORFOSE = (SELECT Id FROM Cat_ManifestacaoEspecifica WHERE Codigo = 'METAMORFOSE');
     SET @ManifestacaoId_REGENERACAO = (SELECT Id FROM Cat_ManifestacaoEspecifica WHERE Codigo = 'REGENERACAO');
 
-    -- Criar tabela temporária para capturar o resultado
-    DECLARE @Resultado TABLE (NovoId INT, CodigoFormatado VARCHAR(50));
+    -- Create a temporary table to capture the result
+    DECLARE @Result TABLE (NovoId INT, CodigoFormatado VARCHAR(50));
 
-    -- Inserir a anomalia
-    INSERT INTO @Resultado
+    -- Insert the anomaly
+    INSERT INTO @Result
     EXEC sp_Anomalia_Inserir 
         @CodigoSCP = 'SCP-1001',
         @NomeComum = 'Proteu - O Metamorfo Complexo',
@@ -51,13 +51,13 @@ BEGIN
         @InstalacaoContencaoId = @InstalacaoId_LAB_BIO_19,
         @ResponsavelPesquisa = 'Dra. Elara Vance';
 
-    -- Obter o ID da anomalia criada
-    SELECT @MetamorfoId = NovoId FROM @Resultado;
+    -- Get the ID of the created anomaly
+    SELECT @MetamorfoId = NovoId FROM @Result;
 
-    -- Limpar a tabela temporária
-    DELETE FROM @Resultado;
+    -- Clear the temporary table
+    DELETE FROM @Result;
 
-    -- Adicionar como Entidade Viva
+    -- Add as a living entity
     EXEC sp_EntidadeViva_Inserir 
         @AnomaliaId = @MetamorfoId,
         @Identificacao = 'Indivíduo-Alpha',
@@ -66,8 +66,8 @@ BEGIN
         @OrigemPoder = 'Catalisador + Acesso PSI',
         @NivelInteligencia = 8;
 
-    -- Adicionar perícia e manifestações
-    INSERT INTO @Resultado
+    -- Add skill and manifestations
+    INSERT INTO @Result
     EXEC sp_Anomalia_AdicionarPericia
         @AnomaliaId = @MetamorfoId,
         @Nome = 'Metamorfose Complexa',
@@ -77,11 +77,11 @@ BEGIN
         @Nivel = 3,
     	@Custo = 'Nenhum'
 
-    -- Obter o ID da Pericia de Anomalia criada
-    SELECT @PericiaMetamorfoseId = NovoId FROM @Resultado;
+    -- Get the ID of the created anomaly skill
+    SELECT @PericiaMetamorfoseId = NovoId FROM @Result;
 
-    -- Limpar a tabela temporária
-    DELETE FROM @Resultado;
+    -- Clear the temporary table
+    DELETE FROM @Result;
 
     EXEC sp_Pericia_AdicionarManifestacao
         @PericiaAnomaliaId = @PericiaMetamorfoseId,
@@ -93,7 +93,7 @@ BEGIN
         @ManifestacaoEspecificaId = @ManifestacaoId_REGENERACAO,
         @Intensidade = 'Média';
 
-    -- Registrar um incidente
+    -- Record an incident
     EXEC sp_Incidente_Registrar
         @AnomaliaId = @MetamorfoId,
         @Tipo = 'Teste de Pesquisa',
@@ -105,7 +105,7 @@ BEGIN
 
 
 
-    -- Exemplo 2: Grimório de Spin Congelado
+    -- Example 2: Frozen Spin Grimoire
     DECLARE @GrimorioId INT;
     DECLARE @PericiaGrimorioId INT;
     DECLARE @ClasseObjetoId_KETER INT, @CamadaOntologicaId_OMEGA INT, @TipoMateriaId_MISTA INT;
@@ -121,8 +121,8 @@ BEGIN
     SET @MecanismoSecundarioId_THETA_C = (SELECT Id FROM Cat_MecanismoInteracao WHERE Codigo = 'OMEGA-C');
 
 
-    -- Inserir a anomalia
-    INSERT INTO @Resultado
+    -- Insert the anomaly
+    INSERT INTO @Result
     EXEC sp_Anomalia_Inserir 
         @CodigoSCP = 'SCP-1002',
         @NomeComum = 'Codex de Realidades - Grimório SIGMA',
@@ -139,14 +139,14 @@ BEGIN
         @InstalacaoContencaoId = @InstalacaoId_AREA_001,
         @ResponsavelPesquisa = 'Dr. Aris Thoth';
 
-    -- Obter o ID da anomalia criada
-    SELECT @GrimorioId = NovoId FROM @Resultado;
+    -- Get the ID of the created anomaly
+    SELECT @GrimorioId = NovoId FROM @Result;
 
 
-    -- Limpar a tabela temporária
-    DELETE FROM @Resultado;
+    -- Clear the temporary table
+    DELETE FROM @Result;
 
-    -- Adicionar como Artefato
+    -- Add as an artifact
     EXEC sp_Artefato_Inserir
         @AnomaliaId = @GrimorioId,
         @Identificacao = 'Codex-Primus',
@@ -155,9 +155,9 @@ BEGIN
         @Peso_Kg = 3.5,
         @ModoUsar = 'Ritual de ativação requer pronúncia precisa e gestos específicos.';
 
-    -- Adicionar perícia para o artefato
+    -- Add a skill for the artifact
 
-    INSERT INTO @Resultado
+    INSERT INTO @Result
     EXEC sp_Anomalia_AdicionarPericia
         @AnomaliaId = @GrimorioId,
         @Nome = 'Manipulação da Realidade',
@@ -167,14 +167,14 @@ BEGIN
         @Nivel = 5,
         @Custo = 'Deutério e ritual específico';
 
-    -- Obter o ID da anomalia criada
-    SELECT @PericiaGrimorioId = NovoId FROM @Resultado;
+    -- Get the ID of the created anomaly
+    SELECT @PericiaGrimorioId = NovoId FROM @Result;
 
 
-    -- Limpar a tabela temporária
-    DELETE FROM @Resultado;
+    -- Clear the temporary table
+    DELETE FROM @Result;
 
-    -- Adicionar manifestações à perícia do grimório
+    -- Add manifestations to the grimoire skill
     DECLARE @ManifestacaoId_DISTORCAO_ST INT, @ManifestacaoId_TELEPATIA INT;
 
     SET @ManifestacaoId_DISTORCAO_ST = (SELECT Id FROM Cat_ManifestacaoEspecifica WHERE Codigo = 'DISTORCAO_ST');
@@ -190,7 +190,7 @@ BEGIN
         @ManifestacaoEspecificaId = @ManifestacaoId_TELEPATIA,
         @Intensidade = 'Média';
 
-    -- Registrar incidente Sigma
+    -- Record a Sigma incident
     EXEC sp_Incidente_Registrar
         @AnomaliaId = @GrimorioId,
         @Tipo = 'Evento SIGMA',
@@ -201,21 +201,21 @@ BEGIN
         @Mortes = 1,
         @DanoMaterial = 'Sala de teste completamente desestruturada';
 
-    PRINT '✅ Sistema de catalogação completo instalado com sucesso!';
-    PRINT 'Estrutura:';
-    PRINT '- 7 tabelas de catálogo (ClasseObjeto, ForcaFundamental, CamadaOntologica, TipoMateria, MecanismoInteracao, ManifestacaoEspecifica, CognicaoAparente, Periculosidade)';
-    PRINT '- 1 tabela principal (Anomalia)';
-    PRINT '- 4 subtabelas 1:N (EntidadeViva, Artefato, Localidade, Evento)';
-    PRINT '- 2 tabelas de perícias (PericiaAnomalia, Instancia_PericiaDesviante)';
-    PRINT '- 2 tabelas de relacionamento N:N (Pericia_Manifestacao, Protocolo_AplicadoEm)';
-    PRINT '- 1 tabela de histórico (Incidente)';
-    PRINT '- Instalacao (absorveu Laboratorio), Operacao, ProtocoloContencao, NotificacaoAnomalia';
-    PRINT '- 2 triggers de integridade';
-    PRINT '- 12 stored procedures de CRUD';
-    PRINT '- 3 views para dashboard';
-    PRINT '- 2 exemplos de anomalias inseridas';
-    PRINT '- 7 instalações (3 sítios, 3 laboratórios, 1 área), 3 protocolos, 2 notificações, 4 operações';
+    PRINT '✅ Full cataloging system installed successfully!';
+    PRINT 'Structure:';
+    PRINT '- 10 catalog tables (ClasseObjeto, ForcaFundamental, CamadaOntologica, TipoMateria, MecanismoInteracao, ManifestacaoEspecifica, CognicaoAparente, Periculosidade, TipoInstalacao, Operacao)';
+    PRINT '- 1 main table (Anomalia)';
+    PRINT '- 4 1:N subtables (EntidadeViva, Artefato, Localidade, Evento)';
+    PRINT '- 2 skill tables (PericiaAnomalia, Instancia_PericiaDesviante)';
+    PRINT '- 2 N:N relationship tables (Pericia_Manifestacao, Protocolo_AplicadoEm)';
+    PRINT '- 1 history table (Incidente)';
+    PRINT '- Instalacao (absorbed Laboratorio), Operacao, ProtocoloContencao, NotificacaoAnomalia';
+    PRINT '- 6 triggers (audit and integrity)';
+    PRINT '- 18 CRUD stored procedures';
+    PRINT '- 3 dashboard views';
+    PRINT '- 2 example anomalies inserted';
+    PRINT '- 7 facilities (3 sites, 3 laboratories, 1 area), 3 protocols, 2 notifications, 4 operations';
 END
 ELSE
-    PRINT 'seed/exemplos: SCP-1001 e SCP-1002 ja existe - pulando.';
+    PRINT 'seed/examples: SCP-1001 and SCP-1002 already exist - skipping.';
 GO

@@ -1,5 +1,5 @@
-﻿-- Seed convergente (run-always). Chave natural: Codigo.
-MERGE Cat_ManifestacaoEspecifica AS alvo
+﻿-- Converging seed (run-always). Natural key: Codigo.
+MERGE Cat_ManifestacaoEspecifica AS target
 USING (VALUES
     ('METAMORFOSE' ,N'Metamorfose'                ,N'Capacidade de alterar forma física'),
     ('REGENERACAO' ,N'Regeneração'                ,N'Capacidade de regenerar tecidos danificados'),
@@ -9,9 +9,9 @@ USING (VALUES
     ('CRYO-05'     ,N'Criogênese'                 ,N'Redução drástica de temperatura'),
     ('TELE-03'     ,N'Telecinese'                 ,N'Movimento de objetos com a mente'),
     ('MEM-07'      ,N'Manipulação de Memória'     ,N'Alteração ou apagamento de memórias')
-) AS origem (Codigo, Nome, Descricao)
-    ON alvo.Codigo = origem.Codigo
-WHEN MATCHED THEN UPDATE SET alvo.Nome = origem.Nome, alvo.Descricao = origem.Descricao
+) AS source (Codigo, Nome, Descricao)
+    ON target.Codigo = source.Codigo
+WHEN MATCHED THEN UPDATE SET target.Nome = source.Nome, target.Descricao = source.Descricao
 WHEN NOT MATCHED BY TARGET THEN
-    INSERT (Codigo, Nome, Descricao) VALUES (origem.Codigo, origem.Nome, origem.Descricao);
+    INSERT (Codigo, Nome, Descricao) VALUES (source.Codigo, source.Nome, source.Descricao);
 GO

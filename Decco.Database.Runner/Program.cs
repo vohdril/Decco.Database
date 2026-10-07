@@ -8,22 +8,22 @@ using DbUp.Support;
 Console.OutputEncoding = Encoding.UTF8;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Decco.Database.Runner — deploy de schema do DeccoDB
+// Decco.Database.Runner — DeccoDB schema deployment
 //
 //   dotnet run -- --target localdb
 //   dotnet run -- --target docker
-//   dotnet run -- --target localdb --baseline   (adoção: marca sem executar)
-//   dotnet run -- --target localdb --dry-run    (lista o que rodaria)
+//   dotnet run -- --target localdb --baseline   (adoption: mark without running)
+//   dotnet run -- --target localdb --dry-run    (list what would run)
 //
-// Ordem de execução:
-//   1. migrations/        RunOnce  — journaled em dbo.SchemaVersions (append-only)
+// Execution order:
+//   1. migrations/        RunOnce  — journaled in dbo.SchemaVersions (append-only)
 //   2. programmability/   RunAlways — CREATE OR ALTER (triggers → procedures → views → descriptions)
-//   3. seed/              RunAlways — MERGE convergente dos catálogos
-//   4. seed/exemplos/     RunAlways — dados de exemplo, guardados por IF NOT EXISTS
+//   3. seed/              RunAlways — converging MERGE of the catalogs
+//   4. seed/examples/     RunAlways — example data, guarded by IF NOT EXISTS
 //
-// Porquê a ordem: `seed/exemplos/` chama stored procedures (sp_Anomalia_Inserir…),
-// então a programabilidade precisa existir antes. E uma migração pode alterar uma
-// tabela de que uma procedure depende, então migrations vem primeiro.
+// Why this order: `seed/examples/` calls stored procedures (sp_Anomalia_Inserir…),
+// so programmability must exist first. And a migration may change a table a
+// procedure depends on, so migrations come first.
 // ─────────────────────────────────────────────────────────────────────────────
 
 var argv = args.ToList();
@@ -42,70 +42,70 @@ var dryRun   = Flag("--dry-run");
 var target   = Opt("--target") ?? "localdb";
 var explicitConnection = Opt("--connection");
 
-// A connection string é UM ÚNICO PONTO TROCÁVEL (reference/02 da decco-maker).
-// Precedência: --connection > variável de ambiente > default do alvo.
+// The connection string is ONE SWAPPABLE POINT (decco-maker reference/02).
+// Precedence: --connection > environment variable > target default.
 var connectionString = explicitConnection
     ?? Environment.GetEnvironmentVariable("DECCO_DB_CONNECTION")
     ?? target switch
     {
         "localdb" => @"Server=(localdb)\MSSQLLocalDB;Database=DeccoDB;Trusted_Connection=True;MultipleActiveResultSets=True;TrustServerCertificate=True;",
-        // >>> senha do Docker SEMPRE por variável de ambiente — nunca neste arquivo
+        // >>> the Docker password ALWAYS comes from an environment variable — never from this file
         "docker"  => $"Server=localhost,1433;Database=DeccoDB;User Id=sa;Password={Environment.GetEnvironmentVariable("DECCO_SA_PASSWORD")};TrustServerCertificate=True;MultipleActiveResultSets=True;",
-        _ => throw new ArgumentException($"Alvo desconhecido: '{target}'. Use localdb | docker, ou passe --connection.")
+        _ => throw new ArgumentException($"Unknown target: '{target}'. Use localdb | docker, or pass --connection.")
     };
 
-var raiz = LocalizarRaizDoProjeto();
+var root = FindProjectRoot();
 var log  = new ConsoleUpgradeLog();
 
 Console.WriteLine($"╔═ Decco.Database.Runner");
-Console.WriteLine($"║  alvo .......... {(explicitConnection is not null ? "(--connection)" : target)}");
-Console.WriteLine($"║  raiz .......... {raiz}");
-Console.WriteLine($"║  modo .......... {(baseline ? "BASELINE (marcar sem executar)" : dryRun ? "DRY-RUN" : "deploy")}");
+Console.WriteLine($"║  target ........ {(explicitConnection is not null ? "(--connection)" : target)}");
+Console.WriteLine($"║  root .......... {root}");
+Console.WriteLine($"║  mode .......... {(baseline ? "BASELINE (mark without running)" : dryRun ? "DRY-RUN" : "deploy")}");
 Console.WriteLine($"╚═");
 
-// ── Etapa 0: criar o banco se não existir ───────────────────────────────────
-// Database-first: o schema é do banco, mas o CONTINENTE (o database) o runner cria.
-// É por isso que `CREATE DATABASE` não vive em nenhum script.
+// ── Step 0: create the database if it does not exist ────────────────────────
+// Database-first: the schema belongs to the database, but the runner creates the
+// CONTAINER (the database itself). That is why `CREATE DATABASE` lives in no script.
 if (!baseline && !dryRun)
     EnsureDatabase.For.SqlDatabase(connectionString);
 
-// ── Modo BASELINE: adoção de um banco que já existe ─────────────────────────
+// ── BASELINE mode: adopting a database that already exists ──────────────────
 if (baseline)
 {
-    var pendentes = Carregar(Path.Combine(raiz, "migrations"), "10-migrations", ScriptType.RunOnce);
+    var pending = Load(Path.Combine(root, "migrations"), "10-migrations", ScriptType.RunOnce);
 
-    Console.WriteLine("\nO modo --baseline MARCA os scripts abaixo como executados, SEM rodá-los.");
-    Console.WriteLine("Use apenas ao adotar um banco que JÁ tem o schema aplicado.\n");
-    foreach (var s in pendentes) Console.WriteLine($"   • {s.Name}");
+    Console.WriteLine("\n--baseline MARKS the scripts below as executed, WITHOUT running them.");
+    Console.WriteLine("Use it only when adopting a database that ALREADY has the schema applied.\n");
+    foreach (var s in pending) Console.WriteLine($"   • {s.Name}");
 
-    Console.Write("\nDigite ADOTAR para confirmar: ");
-    if (Console.ReadLine()?.Trim() != "ADOTAR")
+    Console.Write("\nType ADOPT to confirm: ");
+    if (Console.ReadLine()?.Trim() != "ADOPT")
     {
-        Console.WriteLine("Cancelado. Nada foi alterado.");
+        Console.WriteLine("Cancelled. Nothing was changed.");
         return 2;
     }
 
-    var engineBaseline = DeployChanges.To
+    var baselineEngine = DeployChanges.To
         .SqlDatabase(connectionString)
-        .WithScripts(pendentes)
+        .WithScripts(pending)
         .WithVariablesDisabled()
         .JournalToSqlTable("dbo", "SchemaVersions")
         .LogTo(log)
         .Build();
 
-    engineBaseline.MarkAsExecuted();
-    Console.WriteLine("\n✅ Baseline marcado. Rode novamente sem --baseline para aplicar programabilidade e seed.");
+    baselineEngine.MarkAsExecuted();
+    Console.WriteLine("\n✅ Baseline marked. Run again without --baseline to apply programmability and seed.");
     return 0;
 }
 
-// ── Deploy normal ───────────────────────────────────────────────────────────
-var scripts = CarregarTudo(raiz);
+// ── Normal deployment ───────────────────────────────────────────────────────
+var scripts = LoadAll(root);
 
 var engine = DeployChanges.To
     .SqlDatabase(connectionString)
     .WithScripts(scripts)
-    // `WithVariablesDisabled` desliga a substituição de $variavel$ do DbUp.
-    // Sem isto, qualquer `$` literal num script vira erro de variável não definida.
+    // `WithVariablesDisabled` turns off DbUp's $variable$ substitution.
+    // Without it, any literal `$` in a script becomes an undefined-variable error.
     .WithVariablesDisabled()
     .WithTransactionPerScript()
     .JournalToSqlTable("dbo", "SchemaVersions")
@@ -114,53 +114,53 @@ var engine = DeployChanges.To
 
 if (dryRun)
 {
-    // GetScriptsToExecute() consulta o journal, logo precisa do banco de pé.
-    // Se ele ainda não existe, nada foi aplicado — então tudo rodaria.
-    if (!engine.TryConnect(out var erroConexao))
+    // GetScriptsToExecute() reads the journal, so it needs the database to be up.
+    // If it does not exist yet, nothing was applied — so everything would run.
+    if (!engine.TryConnect(out var connectionError))
     {
-        Console.WriteLine($"\n⚠️  Sem conexão com o banco ({erroConexao}).");
-        Console.WriteLine("    Assumindo banco inexistente: TODOS os scripts rodariam.\n");
+        Console.WriteLine($"\n⚠️  No connection to the database ({connectionError}).");
+        Console.WriteLine("    Assuming a missing database: ALL scripts would run.\n");
         foreach (var s in scripts) Console.WriteLine($"   • {s.Name}");
         return 0;
     }
 
-    Console.WriteLine("\nScripts que seriam executados:\n");
+    Console.WriteLine("\nScripts that would run:\n");
     foreach (var s in engine.GetScriptsToExecute()) Console.WriteLine($"   • {s.Name}");
     return 0;
 }
 
-var resultado = engine.PerformUpgrade();
+var result = engine.PerformUpgrade();
 
-if (!resultado.Successful)
+if (!result.Successful)
 {
     Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine($"\n❌ Falhou em: {resultado.ErrorScript?.Name}");
-    Console.WriteLine(resultado.Error);
+    Console.WriteLine($"\n❌ Failed at: {result.ErrorScript?.Name}");
+    Console.WriteLine(result.Error);
     Console.ResetColor();
     return 1;
 }
 
 Console.ForegroundColor = ConsoleColor.Green;
-Console.WriteLine("\n✅ Deploy concluído.");
+Console.WriteLine("\n✅ Deployment completed.");
 Console.ResetColor();
 return 0;
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ⚠️ O DbUp ORDENA OS SCRIPTS ALFABETICAMENTE PELO NOME — inclusive uma lista
-// explícita passada a WithScripts(). A ordem em que adicionamos à List<> é
-// descartada. Portanto a ordem de execução precisa estar codificada NO NOME.
+// ⚠️ DbUp SORTS SCRIPTS ALPHABETICALLY BY NAME — even an explicit list passed to
+// WithScripts(). The order in which we add them to the List<> is discarded.
+// Therefore the execution order must be encoded IN THE NAME.
 //
-// Daí o prefixo numérico de grupo. Sem ele, a ordem alfabética das pastas seria
-//   descriptions < exemplos < migrations < procedures < seed < triggers < views
-// — e num banco vazio `descriptions` rodaria antes de as tabelas existirem, e
-// `exemplos` antes das stored procedures que ele chama. Os dois falhariam.
+// Hence the numeric group prefix. Without it, the alphabetical folder order would be
+//   descriptions < examples < migrations < procedures < seed < triggers < views
+// — and on an empty database `descriptions` would run before the tables exist, and
+// `examples` before the stored procedures it calls. Both would fail.
 //
-static List<SqlScript> CarregarTudo(string raiz)
+static List<SqlScript> LoadAll(string root)
 {
-    // Os grupos, na ordem em que PRECISAM rodar. O prefixo numérico é o que
-    // GARANTE essa ordem depois da reordenação alfabética do DbUp.
-    (string Pasta, string Prefixo, ScriptType Tipo)[] grupos =
+    // The groups, in the order they MUST run. The numeric prefix is what GUARANTEES
+    // that order after DbUp's alphabetical sort.
+    (string Folder, string Prefix, ScriptType Type)[] groups =
     {
         ("migrations",                                    "10-migrations",   ScriptType.RunOnce),
         (Path.Combine("programmability", "triggers"),     "20-triggers",     ScriptType.RunAlways),
@@ -168,37 +168,37 @@ static List<SqlScript> CarregarTudo(string raiz)
         (Path.Combine("programmability", "views"),        "40-views",        ScriptType.RunAlways),
         (Path.Combine("programmability", "descriptions"), "50-descriptions", ScriptType.RunAlways),
         ("seed",                                          "60-seed",         ScriptType.RunAlways),
-        (Path.Combine("seed", "exemplos"),                "70-exemplos",     ScriptType.RunAlways),
+        (Path.Combine("seed", "examples"),                "70-examples",     ScriptType.RunAlways),
     };
 
-    var todos = new List<SqlScript>();
-    foreach (var (pasta, prefixo, tipo) in grupos)
-        todos.AddRange(Carregar(Path.Combine(raiz, pasta), prefixo, tipo));
-    return todos;
+    var all = new List<SqlScript>();
+    foreach (var (folder, prefix, type) in groups)
+        all.AddRange(Load(Path.Combine(root, folder), prefix, type));
+    return all;
 }
 
-// Carrega os .sql de uma pasta como SqlScript explícitos — à mão, em vez de
-// WithScriptsFromFileSystem, para o runner dizer exatamente o que faz.
-static List<SqlScript> Carregar(string pasta, string prefixo, ScriptType tipo)
+// Loads the .sql files of a folder as explicit SqlScripts — by hand, instead of
+// WithScriptsFromFileSystem, so the runner says exactly what it does.
+static List<SqlScript> Load(string folder, string prefix, ScriptType type)
 {
-    if (!Directory.Exists(pasta)) return new List<SqlScript>();
+    if (!Directory.Exists(folder)) return new List<SqlScript>();
 
-    var opcoes = new SqlScriptOptions { ScriptType = tipo };
+    var options = new SqlScriptOptions { ScriptType = type };
 
     return Directory
-        .GetFiles(pasta, "*.sql", SearchOption.TopDirectoryOnly)
+        .GetFiles(folder, "*.sql", SearchOption.TopDirectoryOnly)
         .OrderBy(f => f, StringComparer.Ordinal)
         .Select(f => new SqlScript(
-            // O nome é a chave do journal E o critério de ordenação.
-            name: $"{prefixo}/{Path.GetFileName(f)}",
+            // The name is the journal key AND the sorting criterion.
+            name: $"{prefix}/{Path.GetFileName(f)}",
             contents: File.ReadAllText(f),
-            sqlScriptOptions: opcoes))
+            sqlScriptOptions: options))
         .ToList();
 }
 
-// Sobe a árvore procurando a pasta que contém `migrations/` — permite rodar
-// tanto de bin/Debug quanto da raiz do projeto.
-static string LocalizarRaizDoProjeto()
+// Walks up the tree looking for the folder that contains `migrations/` — allows
+// running both from bin/Debug and from the project root.
+static string FindProjectRoot()
 {
     var dir = new DirectoryInfo(AppContext.BaseDirectory);
     while (dir is not null)
@@ -207,5 +207,5 @@ static string LocalizarRaizDoProjeto()
         dir = dir.Parent;
     }
     throw new DirectoryNotFoundException(
-        "Não encontrei a pasta 'migrations/'. Rode a partir de Decco.Database/.");
+        "Could not find the 'migrations/' folder. Run from Decco.Database/.");
 }

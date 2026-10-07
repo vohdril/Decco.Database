@@ -1,5 +1,5 @@
-﻿-- Seed convergente (run-always). Chave natural: Nivel (é UNIQUE, CHECK 1..9).
-MERGE Cat_Periculosidade AS alvo
+﻿-- Converging seed (run-always). Natural key: Nivel (UNIQUE, CHECK 1..9).
+MERGE Cat_Periculosidade AS target
 USING (VALUES
     (1,'Mínimo'              ,N'Nenhum perigo em quase todas as manifestações.'                    ,'#4CAF50'),
     (2,'Muito Baixo'         ,N'Leve perigo se não conduzido corretamente.'                        ,'#8BC34A'),
@@ -10,9 +10,9 @@ USING (VALUES
     (7,'Alto II (Recursos)'  ,N'Alto risco mediante condições materiais/geográficas.'              ,'#FF5722'),
     (8,'Muito Alto'          ,N'Risco de romper o Véu/Esquadria. Requer protocolo especial.'       ,'#F44336'),
     (9,'Máximo'              ,N'Nenhum protocolo convencional é esperado funcionar.'               ,'#D32F2F')
-) AS origem (Nivel, Nome, Descricao, CorAlerta)
-    ON alvo.Nivel = origem.Nivel
-WHEN MATCHED THEN UPDATE SET alvo.Nome = origem.Nome, alvo.Descricao = origem.Descricao, alvo.CorAlerta = origem.CorAlerta
+) AS source (Nivel, Nome, Descricao, CorAlerta)
+    ON target.Nivel = source.Nivel
+WHEN MATCHED THEN UPDATE SET target.Nome = source.Nome, target.Descricao = source.Descricao, target.CorAlerta = source.CorAlerta
 WHEN NOT MATCHED BY TARGET THEN
-    INSERT (Nivel, Nome, Descricao, CorAlerta) VALUES (origem.Nivel, origem.Nome, origem.Descricao, origem.CorAlerta);
+    INSERT (Nivel, Nome, Descricao, CorAlerta) VALUES (source.Nivel, source.Nome, source.Descricao, source.CorAlerta);
 GO

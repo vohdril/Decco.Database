@@ -1,10 +1,10 @@
--- Procedure para buscar operações com filtros
--- É a consulta ESCOPADA do schema: @InstalacaoId filtra pela instalação e,
--- com @IncluirSubinstalacoes = 1 (padrão), inclui as filhas — operações de um
--- laboratório aparecem ao consultar o sítio que o contém.
--- @NivelAcessoUsuario recorta por clearance (Operacao.NivelAcessoMinimo).
--- O recorte por INSTALAÇÃO PERMITIDA ao usuário é da aplicação: a relação
--- usuário↔instalação vive no DeccoAuthDB, que este banco não enxerga.
+-- Procedure that searches operations with filters
+-- It is the SCOPED query of the schema: @InstalacaoId filters by facility and,
+-- with @IncluirSubinstalacoes = 1 (default), includes its children — operations of a
+-- laboratory show up when querying the site that contains it.
+-- @NivelAcessoUsuario slices by clearance (Operacao.NivelAcessoMinimo).
+-- Slicing by the facilities ALLOWED to the user is the application's job: the
+-- user↔facility relation lives in DeccoAuthDB, which this database cannot see.
 CREATE OR ALTER PROCEDURE sp_Operacao_Buscar
     @InstalacaoId INT = NULL,
     @IncluirSubinstalacoes BIT = 1,
@@ -20,15 +20,15 @@ BEGIN
 
     DECLARE @Offset INT = (@Pagina - 1) * @ItensPorPagina;
 
-    -- Instalações no escopo da consulta (a própria + filhas diretas).
-    -- A hierarquia tem profundidade máxima 2 (sítio → filhos), garantida por
-    -- TR_Instalacao_Validar_Hierarquia — por isso não é preciso CTE recursiva.
-    DECLARE @Escopo TABLE (Id INT PRIMARY KEY);
+    -- Facilities in the query scope (itself + direct children).
+    -- The hierarchy has a maximum depth of 2 (site → children), guaranteed by
+    -- TR_Instalacao_Validar_Hierarquia — which is why no recursive CTE is needed.
+    DECLARE @Scope TABLE (Id INT PRIMARY KEY);
     IF @InstalacaoId IS NOT NULL
     BEGIN
-        INSERT INTO @Escopo (Id) VALUES (@InstalacaoId);
+        INSERT INTO @Scope (Id) VALUES (@InstalacaoId);
         IF @IncluirSubinstalacoes = 1
-            INSERT INTO @Escopo (Id)
+            INSERT INTO @Scope (Id)
             SELECT Id FROM Instalacao WHERE InstalacaoPaiId = @InstalacaoId;
     END
 
@@ -60,7 +60,7 @@ BEGIN
     INNER JOIN Instalacao i ON i.Id = o.InstalacaoId
     LEFT JOIN Anomalia a ON a.Id = o.AnomaliaId
     LEFT JOIN ProtocoloContencao p ON p.Id = o.ProtocoloId
-    WHERE (@InstalacaoId IS NULL OR o.InstalacaoId IN (SELECT Id FROM @Escopo))
+    WHERE (@InstalacaoId IS NULL OR o.InstalacaoId IN (SELECT Id FROM @Scope))
       AND (@TipoOperacaoId IS NULL OR o.TipoOperacaoId = @TipoOperacaoId)
       AND (@Status IS NULL OR o.Status = @Status)
       AND (@AnomaliaId IS NULL OR o.AnomaliaId = @AnomaliaId)
@@ -69,10 +69,10 @@ BEGIN
     OFFSET @Offset ROWS
     FETCH NEXT @ItensPorPagina ROWS ONLY;
 
-    -- Total de registros para paginação
+    -- Total record count for paging
     SELECT COUNT(*) AS TotalRegistros
     FROM Operacao o
-    WHERE (@InstalacaoId IS NULL OR o.InstalacaoId IN (SELECT Id FROM @Escopo))
+    WHERE (@InstalacaoId IS NULL OR o.InstalacaoId IN (SELECT Id FROM @Scope))
       AND (@TipoOperacaoId IS NULL OR o.TipoOperacaoId = @TipoOperacaoId)
       AND (@Status IS NULL OR o.Status = @Status)
       AND (@AnomaliaId IS NULL OR o.AnomaliaId = @AnomaliaId)

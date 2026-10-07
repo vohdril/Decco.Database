@@ -1,7 +1,7 @@
--- Procedure para atualizar notificação de anomalia
--- Não existia no baseline: o NotificacaoAnomaliaRepository da Decco.API já a
--- chamava (UpdateAsync) e falhava com "Could not find stored procedure".
--- Segue o padrão de sp_Anomalia_Atualizar: parâmetro NULL = "não alterar".
+-- Procedure that updates an anomaly notification
+-- It did not exist in the baseline: the Decco.API NotificacaoAnomaliaRepository already
+-- called it (UpdateAsync) and failed with "Could not find stored procedure".
+-- Follows the sp_Anomalia_Atualizar pattern: a NULL parameter = "do not change".
 CREATE OR ALTER PROCEDURE sp_NotificacaoAnomalia_Atualizar
     @Id INT,
     @Titulo NVARCHAR(255) = NULL,
@@ -30,7 +30,7 @@ BEGIN
         WHERE Id = @Id;
 
         IF @@ROWCOUNT = 0
-            THROW 50404, 'Notificação não encontrada', 1;
+            THROW 50404, 'Notification not found', 1;
 
     END TRY
     BEGIN CATCH

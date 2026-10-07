@@ -1,10 +1,10 @@
--- Procedure para atualizar uma operação
--- Codigo e InstalacaoId NÃO são atualizáveis: o código é a identidade pública e
--- a instalação é o ESCOPO da operação (chave do cache escopado). Uma operação
--- que muda de instalação é, para efeito de permissão, outra operação.
+-- Procedure that updates an operation
+-- Codigo and InstalacaoId CANNOT be updated: the code is the public identity and the
+-- facility is the operation SCOPE (the scoped cache key). An operation that moves
+-- to another facility is, for permission purposes, a different operation.
 --
--- Encerramento: ao passar para CONCLUIDA ou ABORTADA sem @DataEncerramento, a
--- data é preenchida com GETDATE(). Ao voltar para um estado aberto, é limpa.
+-- Closing: when moving to CONCLUIDA or ABORTADA without @DataEncerramento, the
+-- date is filled with GETDATE(). When going back to an open state, it is cleared.
 CREATE OR ALTER PROCEDURE sp_Operacao_Atualizar
     @Id INT,
     @Codinome NVARCHAR(100) = NULL,
@@ -49,7 +49,7 @@ BEGIN
         WHERE Id = @Id;
 
         IF @@ROWCOUNT = 0
-            THROW 50404, 'Operação não encontrada', 1;
+            THROW 50404, 'Operation not found', 1;
 
     END TRY
     BEGIN CATCH

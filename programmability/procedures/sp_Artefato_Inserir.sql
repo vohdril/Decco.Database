@@ -1,4 +1,4 @@
-﻿-- Procedure para inserir um artefato
+﻿-- Procedure that inserts an artifact
 CREATE OR ALTER PROCEDURE sp_Artefato_Inserir
     @AnomaliaId INT,
     @Identificacao NVARCHAR(100),
@@ -15,7 +15,7 @@ BEGIN
     
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM Anomalia WHERE Id = @AnomaliaId)
-            RAISERROR('Anomalia não encontrada', 16, 1);
+            RAISERROR('Anomaly not found', 16, 1);
             
         INSERT INTO Artefato (
             AnomaliaId, Identificacao, Material, DataFabricacao, LocalOrigem,

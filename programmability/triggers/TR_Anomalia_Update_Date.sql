@@ -1,4 +1,4 @@
-﻿-- Trigger para atualizar DataAtualizacao automaticamente
+﻿-- Trigger that keeps DataAtualizacao up to date automatically
 CREATE OR ALTER TRIGGER TR_Anomalia_Update_Date
 ON Anomalia
 AFTER UPDATE

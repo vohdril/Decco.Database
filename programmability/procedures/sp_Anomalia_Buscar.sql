@@ -1,4 +1,4 @@
-﻿-- Procedure para buscar anomalias com filtros complexos
+﻿-- Procedure that searches anomalies with complex filters
 CREATE OR ALTER PROCEDURE sp_Anomalia_Buscar
     @CodigoSCP VARCHAR(50) = NULL,
     @ClasseObjetoId INT = NULL,
@@ -33,7 +33,7 @@ BEGIN
         a.DataCriacao,
         a.DataAtualizacao,
         
-        -- Manifestações como string agregada (via perícias)
+        -- Manifestations as an aggregated string (through skills)
         STUFF((
             SELECT DISTINCT ', ' + cm.Nome
             FROM PericiaAnomalia pa
@@ -43,13 +43,13 @@ BEGIN
             FOR XML PATH(''), TYPE
         ).value('.', 'NVARCHAR(MAX)'), 1, 2, '') as Manifestacoes,
         
-        -- Contador de incidentes
+        -- Incident counter
         (SELECT COUNT(*) FROM Incidente i WHERE i.AnomaliaId = a.Id) as TotalIncidentes,
         
-        -- Contador de incidentes Sigma
+        -- Sigma incident counter
         (SELECT COUNT(*) FROM Incidente i WHERE i.AnomaliaId = a.Id AND i.IsEventoSigma = 1) as IncidentesSigma,
         
-        -- Contadores de instâncias
+        -- Instance counters
         (SELECT COUNT(*) FROM EntidadeViva ev WHERE ev.AnomaliaId = a.Id) as QtdEntidades,
         (SELECT COUNT(*) FROM Artefato ar WHERE ar.AnomaliaId = a.Id) as QtdArtefatos
         
@@ -71,7 +71,7 @@ BEGIN
     OFFSET @Offset ROWS
     FETCH NEXT @ItensPorPagina ROWS ONLY;
     
-    -- Retornar também o total de registros para paginação
+    -- Also return the total record count for paging
     SELECT COUNT(*) as TotalRegistros
     FROM Anomalia a
     INNER JOIN Cat_CamadaOntologica ca ON a.CamadaOntologicaId = ca.Id

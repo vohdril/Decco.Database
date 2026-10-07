@@ -1,15 +1,15 @@
--- Trigger para validar regras de negócio da operação
+-- Trigger that validates operation business rules
 --
--- Regras:
---   1. Tipo com RequerAnomalia = 1 (PESQUISA, SUPRESSAO) exige AnomaliaId.
---   2. Tipo inativo não pode ser usado em operação nova (nem por troca de tipo).
---   3. Só instalação ATIVA recebe operação nova (nem por troca de instalação).
--- As regras 2 e 3 olham para `deleted`: num UPDATE que não mexe no tipo nem na
--- instalação, operações antigas continuam editáveis mesmo que o tipo tenha sido
--- desativado ou a instalação encerrada depois.
+-- Rules:
+--   1. A type with RequerAnomalia = 1 (PESQUISA, SUPRESSAO) requires AnomaliaId.
+--   2. An inactive type cannot be used in a new operation (nor by changing the type).
+--   3. Only an ATIVA facility receives a new operation (nor by changing the facility).
+-- Rules 2 and 3 look at `deleted`: in an UPDATE that touches neither the type nor the
+-- facility, older operations stay editable even if the type was deactivated or the
+-- facility closed afterwards.
 --
--- Usa THROW pelo mesmo motivo de TR_Instalacao_Validar_Hierarquia: desfaz a
--- operação inválida em vez de só avisar.
+-- Uses THROW for the same reason as TR_Instalacao_Validar_Hierarquia: it rolls back
+-- the invalid operation instead of only warning.
 CREATE OR ALTER TRIGGER TR_Operacao_Validar
 ON Operacao
 AFTER INSERT, UPDATE
@@ -23,7 +23,7 @@ BEGIN
           JOIN Cat_Operacao c ON c.Id = i.TipoOperacaoId
          WHERE c.RequerAnomalia = 1 AND i.AnomaliaId IS NULL
     )
-        THROW 50420, 'Este tipo de operação exige uma anomalia catalogada (AnomaliaId).', 1;
+        THROW 50420, 'This operation type requires a cataloged anomaly (AnomaliaId).', 1;
 
     IF EXISTS (
         SELECT 1
@@ -33,7 +33,7 @@ BEGIN
          WHERE c.Ativo = 0
            AND (d.Id IS NULL OR d.TipoOperacaoId <> i.TipoOperacaoId)
     )
-        THROW 50421, 'Tipo de operação inativo não pode ser usado em operação nova.', 1;
+        THROW 50421, 'An inactive operation type cannot be used in a new operation.', 1;
 
     IF EXISTS (
         SELECT 1
@@ -43,6 +43,6 @@ BEGIN
          WHERE inst.Status <> 'ATIVA'
            AND (d.Id IS NULL OR d.InstalacaoId <> i.InstalacaoId)
     )
-        THROW 50422, 'Só uma instalação ATIVA pode receber operação nova.', 1;
+        THROW 50422, 'Only an ATIVA facility can receive a new operation.', 1;
 END;
 GO

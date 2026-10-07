@@ -1,9 +1,9 @@
--- Procedure para abrir uma operação
--- @Codigo é opcional: se omitido, é gerado no formato OP-{ano}-{sequencial},
--- ex.: OP-2026-0001. O sequencial é por ano e calculado sob UPDLOCK/HOLDLOCK
--- para que duas aberturas simultâneas não gerem o mesmo código.
--- As regras de negócio (o tipo exige anomalia? a instalação aceita operação?)
--- vivem em TR_Operacao_Validar, para valerem também fora desta procedure.
+-- Procedure that opens an operation
+-- @Codigo is optional: when omitted, it is generated as OP-{year}-{sequence},
+-- e.g. OP-2026-0001. The sequence is per year and computed under UPDLOCK/HOLDLOCK
+-- so that two concurrent openings never generate the same code.
+-- The business rules (does the type require an anomaly? does the facility accept it?)
+-- live in TR_Operacao_Validar, so they also apply outside this procedure.
 CREATE OR ALTER PROCEDURE sp_Operacao_Inserir
     @Codinome NVARCHAR(100),
     @TipoOperacaoId INT,
@@ -28,13 +28,13 @@ BEGIN
 
         IF @Codigo IS NULL
         BEGIN
-            DECLARE @Prefixo VARCHAR(8) = 'OP-' + CAST(YEAR(GETDATE()) AS VARCHAR(4)) + '-';
-            DECLARE @Ultimo INT = (
+            DECLARE @Prefix VARCHAR(8) = 'OP-' + CAST(YEAR(GETDATE()) AS VARCHAR(4)) + '-';
+            DECLARE @LastSequence INT = (
                 SELECT MAX(CAST(SUBSTRING(Codigo, 9, 4) AS INT))
                   FROM Operacao WITH (UPDLOCK, HOLDLOCK)
-                 WHERE Codigo LIKE @Prefixo + '[0-9][0-9][0-9][0-9]'
+                 WHERE Codigo LIKE @Prefix + '[0-9][0-9][0-9][0-9]'
             );
-            SET @Codigo = @Prefixo + RIGHT('0000' + CAST(ISNULL(@Ultimo, 0) + 1 AS VARCHAR(4)), 4);
+            SET @Codigo = @Prefix + RIGHT('0000' + CAST(ISNULL(@LastSequence, 0) + 1 AS VARCHAR(4)), 4);
         END
 
         INSERT INTO Operacao (Codigo, Codinome, TipoOperacaoId, InstalacaoId,
@@ -46,11 +46,11 @@ BEGIN
                 @Objetivo, @Descricao, @Prioridade, @NivelAcessoMinimo,
                 @Responsavel, @DataPrevisaoTermino);
 
-        DECLARE @NovoId INT = CAST(SCOPE_IDENTITY() AS INT);
+        DECLARE @NewId INT = CAST(SCOPE_IDENTITY() AS INT);
 
         COMMIT TRANSACTION;
 
-        SELECT @NovoId AS NovoId, @Codigo AS CodigoFormatado;
+        SELECT @NewId AS NovoId, @Codigo AS CodigoFormatado;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;

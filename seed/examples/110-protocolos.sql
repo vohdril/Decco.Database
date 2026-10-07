@@ -1,11 +1,11 @@
-﻿-- Dados de exemplo - Protocolos de contencao (decco.sql secao 11B)
--- Run-always, mas GUARDADO: so insere se ainda nao existir. Rodar duas vezes e inofensivo.
+﻿-- Example data - Containment protocols (decco.sql section 11B)
+-- Run-always, but GUARDED: inserts only if it does not exist yet. Running it twice is harmless.
 IF NOT EXISTS (SELECT 1 FROM ProtocoloContencao WHERE Codigo = 'PROT-BIO-STD')
 BEGIN
-    PRINT 'seed/exemplos: inserindo protocolos';
+    PRINT 'seed/examples: inserting protocols';
 
     -- =============================================
-    -- SEÇÃO 11B: DADOS DE EXEMPLO — PROTOCOLOS
+    -- SECTION 11B: EXAMPLE DATA — PROTOCOLS
     -- =============================================
     INSERT INTO ProtocoloContencao (Codigo, Titulo, Descricao, NivelUrgencia, ClassesAplicaveis, Passos, RecursosNecessarios) VALUES
     ('PROT-BIO-STD', 'Protocolo Padrão de Conteção Biológica', 'Procedimentos padrão para entidades biológicas anômalas de baixo risco.', 2, 'PACATO,YAGUARA',
@@ -19,5 +19,5 @@ BEGIN
      'Diário ontológico, gravador de campo Psi, bloqueador de memória');
 END
 ELSE
-    PRINT 'seed/exemplos: protocolos ja existe - pulando.';
+    PRINT 'seed/examples: protocols already exist - skipping.';
 GO

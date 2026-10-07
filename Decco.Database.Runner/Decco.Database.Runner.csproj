@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- dbup-sqlserver 7.2.0 (2026-02-24) traz dbup-core >= 6.1.1 e Microsoft.Data.SqlClient >= 6.1.4.
-         Conferir no primeiro `dotnet restore` se as versões resolvidas batem. -->
+    <!-- dbup-sqlserver 7.2.0 (2026-02-24) brings dbup-core >= 6.1.1 and Microsoft.Data.SqlClient >= 6.1.4.
+         Check on the first `dotnet restore` that the resolved versions match. -->
     <PackageReference Include="dbup-core" Version="6.1.1" />
     <PackageReference Include="dbup-sqlserver" Version="7.2.0" />
   </ItemGroup>

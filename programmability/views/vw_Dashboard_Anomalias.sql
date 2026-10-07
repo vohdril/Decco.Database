@@ -16,7 +16,7 @@ SELECT
     ic.Codigo AS InstalacaoContencaoCodigo,
     ic.Nome AS InstalacaoContencao,
     
-    -- Indicadores de risco
+    -- Risk indicators
     CASE 
         WHEN co.Codigo = 'KETER' THEN 3
         WHEN co.Codigo = 'EUCLID' THEN 2
@@ -31,7 +31,7 @@ SELECT
         ELSE 'THETA-BAIXO'
     END as StatusTheta,
     
-    -- Contadores
+    -- Counters
     (SELECT COUNT(*) FROM Incidente i WHERE i.AnomaliaId = a.Id AND i.IsEventoSigma = 1) as ContagemSigma,
     (SELECT COUNT(*) FROM EntidadeViva ev WHERE ev.AnomaliaId = a.Id) as QtdEntidades,
     (SELECT COUNT(*) FROM Artefato ar WHERE ar.AnomaliaId = a.Id) as QtdArtefatos

@@ -1,4 +1,4 @@
-﻿-- Procedure para adicionar uma perícia a uma anomalia
+﻿-- Procedure that adds a skill (pericia) to an anomaly
 CREATE OR ALTER PROCEDURE sp_Anomalia_AdicionarPericia
     @AnomaliaId INT,
     @Nome NVARCHAR(100),
@@ -13,7 +13,7 @@ BEGIN
     
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM Anomalia WHERE Id = @AnomaliaId)
-            RAISERROR('Anomalia não encontrada', 16, 1);
+            RAISERROR('Anomaly not found', 16, 1);
             
         INSERT INTO PericiaAnomalia (
             AnomaliaId, Nome, Descricao, 
@@ -25,10 +25,10 @@ BEGIN
             @Nivel, @Custo
         );
         
-        DECLARE @NovaPericiaId INT = SCOPE_IDENTITY();
+        DECLARE @NewPericiaId INT = SCOPE_IDENTITY();
         
-        -- Retornar de forma padronizada com outras procedures
-        SELECT @NovaPericiaId as NovoId, @Nome as NomePericia;
+        -- Return in the same shape as the other procedures
+        SELECT @NewPericiaId as NovoId, @Nome as NomePericia;
         
     END TRY
     BEGIN CATCH

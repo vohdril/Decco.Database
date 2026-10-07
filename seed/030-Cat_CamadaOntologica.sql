@@ -1,6 +1,6 @@
-﻿-- Seed convergente (run-always). Chave natural: Simbolo.
--- FK resolvida por Simbolo da força (não por Id fixo) — sobrevive a reseed.
-MERGE Cat_CamadaOntologica AS alvo
+﻿-- Converging seed (run-always). Natural key: Simbolo.
+-- FK resolved by the force Simbolo (not by a fixed Id) — survives a reseed.
+MERGE Cat_CamadaOntologica AS target
 USING (
     SELECT v.Simbolo, v.Nome, v.Descricao, f.Id AS ForcaFundamentalId, v.Prioridade
     FROM (VALUES
@@ -10,12 +10,12 @@ USING (
         ('OMEGA','OMEGA','Substrato Não-Bariônico. Acesso à "matéria escura" consciente.'                          ,'Lambda',2)
     ) AS v (Simbolo, Nome, Descricao, ForcaSimbolo, Prioridade)
     LEFT JOIN Cat_ForcaFundamental f ON f.Simbolo = v.ForcaSimbolo
-) AS origem
-    ON alvo.Simbolo = origem.Simbolo
+) AS source
+    ON target.Simbolo = source.Simbolo
 WHEN MATCHED THEN UPDATE SET
-    alvo.Nome = origem.Nome, alvo.Descricao = origem.Descricao,
-    alvo.ForcaFundamentalId = origem.ForcaFundamentalId, alvo.Prioridade = origem.Prioridade
+    target.Nome = source.Nome, target.Descricao = source.Descricao,
+    target.ForcaFundamentalId = source.ForcaFundamentalId, target.Prioridade = source.Prioridade
 WHEN NOT MATCHED BY TARGET THEN
     INSERT (Simbolo, Nome, Descricao, ForcaFundamentalId, Prioridade)
-    VALUES (origem.Simbolo, origem.Nome, origem.Descricao, origem.ForcaFundamentalId, origem.Prioridade);
+    VALUES (source.Simbolo, source.Nome, source.Descricao, source.ForcaFundamentalId, source.Prioridade);
 GO

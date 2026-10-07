@@ -1,7 +1,7 @@
--- Procedure para atualizar instalação
--- Codigo NÃO é atualizável: é a identidade pública (IdToCode) e a chave do
--- cache escopado (decco:inst:{codigo}:*). Trocar o código invalidaria chaves e
--- referências externas sem aviso.
+-- Procedure that updates a facility
+-- Codigo CANNOT be updated: it is the public identity (IdToCode) and the key of the
+-- scoped cache (decco:inst:{codigo}:*). Changing the code would invalidate keys and
+-- external references without warning.
 CREATE OR ALTER PROCEDURE sp_Instalacao_Atualizar
     @Id INT,
     @Nome NVARCHAR(255) = NULL,
@@ -30,7 +30,7 @@ BEGIN
         WHERE Id = @Id;
 
         IF @@ROWCOUNT = 0
-            THROW 50404, 'Instalação não encontrada', 1;
+            THROW 50404, 'Facility not found', 1;
 
     END TRY
     BEGIN CATCH

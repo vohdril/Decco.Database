@@ -1,4 +1,4 @@
-﻿-- Trigger para validar mecanismos secundários
+﻿-- Trigger that validates secondary mechanisms
 CREATE OR ALTER TRIGGER TR_Anomalia_Validar_Mecanismos
 ON Anomalia
 AFTER INSERT, UPDATE
@@ -6,7 +6,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
-    -- Verificar se mecanismo secundário é realmente uma subnatureza
+    -- Check that the secondary mechanism really is a sub-nature
     IF EXISTS (
         SELECT 1 
         FROM inserted i
@@ -14,11 +14,11 @@ BEGIN
         WHERE sec.EhSubnatureza = 0 AND i.MecanismoSecundarioId IS NOT NULL
     )
     BEGIN
-        RAISERROR('Mecanismo secundário deve ter EhSubnatureza = 1', 16, 1);
+        RAISERROR('Secondary mechanism must have EhSubnatureza = 1', 16, 1);
         RETURN;
     END
     
-    -- Verificar consistência de camadas
+    -- Check layer consistency
     IF EXISTS (
         SELECT 1 
         FROM inserted i
@@ -29,7 +29,7 @@ BEGIN
         WHERE cp.Simbolo = 'OMEGA' AND cs.Simbolo = 'THETA'
     )
     BEGIN
-        RAISERROR('Anomalia OMEGA não pode ter subnatureza THETA', 16, 1);
+        RAISERROR('An OMEGA anomaly cannot have a THETA sub-nature', 16, 1);
         RETURN;
     END
 END;

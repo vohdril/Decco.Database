@@ -1,7 +1,7 @@
--- Procedure para criar instalação (substitui sp_Laboratorio_Inserir)
--- Um laboratório agora é: @TipoInstalacaoId = LABORATORIO + @InstalacaoPaiId = o sítio.
--- As regras de hierarquia (quem pode ser pai de quem) vivem em
--- TR_Instalacao_Validar_Hierarquia, para valerem também fora desta procedure.
+-- Procedure that creates a facility (replaces sp_Laboratorio_Inserir)
+-- A laboratory is now: @TipoInstalacaoId = LABORATORIO + @InstalacaoPaiId = the site.
+-- The hierarchy rules (who can be whose parent) live in
+-- TR_Instalacao_Validar_Hierarquia, so they also apply outside this procedure.
 CREATE OR ALTER PROCEDURE sp_Instalacao_Inserir
     @Codigo VARCHAR(20),
     @Nome NVARCHAR(255),

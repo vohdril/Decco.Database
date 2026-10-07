@@ -1,4 +1,4 @@
-﻿-- Procedure para criar protocolo de contenção
+﻿-- Procedure that creates a containment protocol
 CREATE OR ALTER PROCEDURE sp_ProtocoloContencao_Inserir
     @Codigo VARCHAR(20),
     @Titulo NVARCHAR(255),

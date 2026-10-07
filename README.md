@@ -9,6 +9,11 @@ mesmo repositório — nada de CLI externo.
 > **Dados 100% fictícios.** Nenhum segredo, credencial real ou dado pessoal. Senhas de container vêm sempre de
 > variável de ambiente.
 
+> **Idioma do código:** inglês — comentários, mensagens, variáveis T-SQL, descrições (`MS_Description`) e o dicionário
+> gerado. O vocabulário do schema (tabelas, colunas, procedures: `Anomalia`, `sp_Operacao_Buscar`…) mantém o nome em
+> português, e as **migrações já aplicadas não são editadas** (por isso `migrations/` segue em português). Os dados de
+> seed (nomes, lore) são conteúdo e também ficam como estão.
+
 ## Repositórios do ecossistema
 
 | Repo | Papel |
@@ -41,16 +46,16 @@ programmability/       RUN-ALWAYS, CREATE OR ALTER — editável no lugar, diff�
 
 seed/                  RUN-ALWAYS, MERGE convergente
   010..100-Cat_*.sql   os 10 catálogos
-  exemplos/            dados de exemplo, guardados por IF NOT EXISTS
+  examples/            dados de exemplo, guardados por IF NOT EXISTS
 
-docs/                  gerar-dicionario.sql → DICIONARIO-DE-DADOS.md
+docs/                  generate-data-dictionary.sql → DATA-DICTIONARY.md
 docker/                SQL Server para o alvo `docker`
 Decco.Database.Runner/ console .NET 8 que faz o deploy
 ```
 
-**Ordem de execução:** `migrations` → `programmability` (triggers → procedures → views → descriptions) → `seed` → `seed/exemplos`.
+**Ordem de execução:** `migrations` → `programmability` (triggers → procedures → views → descriptions) → `seed` → `seed/examples`.
 
-Por que nesta ordem: `seed/exemplos/` chama stored procedures, então a programabilidade precisa existir antes;
+Por que nesta ordem: `seed/examples/` chama stored procedures, então a programabilidade precisa existir antes;
 e uma migração pode alterar uma tabela de que uma procedure depende, então as migrações vêm primeiro.
 
 ---
@@ -75,7 +80,7 @@ O `DeccoDB` atual já tem o schema e os dados. O baseline **não pode ser re-exe
 
 ```bash
 dotnet run --project Decco.Database.Runner -- --target localdb --baseline
-# confirme digitando ADOTAR
+# confirme digitando ADOPT
 dotnet run --project Decco.Database.Runner -- --target localdb
 ```
 
@@ -173,7 +178,7 @@ Elas aparecem no SSMS e no Azure Data Studio, viram `<summary>` nas classes gera
 `dotnet ef dbcontext scaffold`, e alimentam o dicionário:
 
 ```bash
-sqlcmd -S "(localdb)\MSSQLLocalDB" -d DeccoDB -i docs/gerar-dicionario.sql -o docs/DICIONARIO-DE-DADOS.md -h -1 -W -f 65001
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d DeccoDB -i docs/generate-data-dictionary.sql -o docs/DATA-DICTIONARY.md -h -1 -W -f 65001
 ```
 
 Cobertura atual: **24/24 tabelas** e **94 colunas** de domínio documentadas.

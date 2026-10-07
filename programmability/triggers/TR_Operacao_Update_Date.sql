@@ -1,5 +1,5 @@
--- Trigger para atualizar DataAtualizacao/UsuarioAtualizacao automaticamente
--- Mesmo padrão de TR_Anomalia_Update_Date.
+-- Trigger that keeps DataAtualizacao/UsuarioAtualizacao up to date automatically
+-- Same pattern as TR_Anomalia_Update_Date.
 CREATE OR ALTER TRIGGER TR_Operacao_Update_Date
 ON Operacao
 AFTER UPDATE
