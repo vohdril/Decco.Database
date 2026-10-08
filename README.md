@@ -21,7 +21,7 @@ mesmo repositório — nada de CLI externo.
 |---|---|
 | [`Decco.API`](https://github.com/vohdril/Decco.API) | core .NET 8 (EF Core + Dapper) que **possui** este banco |
 | [`Decco.Dashboard`](https://github.com/vohdril/Decco.Dashboard) | front React/Vite + Module Federation |
-| [`decco-skills`](https://github.com/vohdril/decco-skills) | as skills didáticas que guiam o desenvolvimento (a migrar para `Decco.Skills`) |
+| [`Decco.Skills`](https://github.com/vohdril/Decco.Skills) | o hub de skills didáticas que guiam o desenvolvimento (substitui o `decco-skills`, arquivado) |
 | **`Decco.Database`** | **este repo** — o schema, versionado |
 
 Por que um repositório separado para o banco: o schema tem ciclo de vida próprio (muda por migração, não por
