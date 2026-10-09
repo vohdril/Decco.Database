@@ -228,5 +228,6 @@ Nada do DDL foi alterado. As transformações aplicadas na quebra em arquivos fo
 | `Cat_MecanismoInteracao.CamadaOntologicaId` (hoje `Cat_InteractionMechanism.OntologicalLayerId`) resolvido por `Simbolo` | o original gravava os literais `1..4`, dependendo da ordem do IDENTITY |
 | dados de exemplo envolvidos em `IF NOT EXISTS` | permitem rerodar sem violar as chaves únicas |
 
-Inconsistências herdadas do baseline (`CHAR(10)` com padding, `TEXT` deprecado, `Eh*` vs `Is*`, auditoria parcial)
-**não** foram corrigidas aqui — cada uma é uma migração própria. Lista completa no `DECCO-BACKLOG.md`.
+Inconsistências herdadas do baseline (`CHAR(10)` com padding, `TEXT` deprecado, auditoria parcial) **não** foram
+corrigidas aqui — cada uma é uma migração própria. Lista completa no `DECCO-BACKLOG.md` e na `decco-compass/reference/22`
+§8.2. A exceção é `Eh*` vs `Is*`, resolvida de carona pela tradução (`EhSubnatureza` → `IsSubNature`, na `0005`).
